@@ -1,0 +1,133 @@
+feature_lists: {
+feature_list: {
+key: "interface_identifier"
+value: {
+feature: {
+int64_list: {
+value: 1
+value: 2
+value: 3
+value: 4
+value: 5
+value: 6
+value: 7
+value: 8 value: 9
+value: 10
+value: 11
+value: 12
+value: 0
+}
+}
+}
+}
+feature_list: {
+key: "reachable"
+value: {
+feature: {
+int64_list: {
+value: 1
+value: 1
+value: 0
+value: 0
+value: 0
+value: 1
+value: 1
+value: 0
+value: 1
+value: 0
+value: 0
+value: 0
+value: 0
+}
+}
+}
+}
+feature_list: {
+key: "distance"
+value: {
+feature: {
+int64_list: {
+value: 47
+value: 81
+value: 25
+value: 56
+value: 94
+value: 62
+value: 28
+value: 11
+value: 37
+value: 95
+value: 28
+value: 47
+value: 0
+}
+}
+}
+}
+feature_list: {
+key: "distance"
+value: {
+feature: {
+int64_list: {
+value: 47
+value: 81
+value: 25
+value: 56
+value: 94
+value: 62
+value: 28
+value: 11
+value: 37
+value: 95
+value: 28
+value: 47
+value: 0
+}
+}
+}
+}
+feature_list: {
+key: "active_output"
+value: {
+feature: {
+int64_list: {
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 1
+}
+}
+}
+}
+feature_list: {
+key: "selected_interface"
+value: {
+feature: {
+int64_list: {
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 0
+value: 7
+}
+}
+}
+}
+}
