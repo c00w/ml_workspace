@@ -64,7 +64,7 @@ class ToySequenceData(object):
 
 # Parameters
 learning_rate = 0.0001
-training_iters = 10000000
+training_iters = 1000000000
 batch_size = 100
 display_step = 1000
 
