@@ -7,7 +7,7 @@ import random
 
 class ToySequenceData(object):
     def __init__(self, n_samples=1000, max_seq_len=20, min_seq_len=3,
-                 max_value=1000):
+                 max_value=1000, max_interfaces=10):
         self.data = []
         self.labels = []
         self.seqlen = []
@@ -17,7 +17,6 @@ class ToySequenceData(object):
             reachable = []
 
             # Random sequence length
-            max_interfaces = 16
             num_interfaces = random.randint(min_seq_len, max_interfaces)
             # Monitor sequence length for TensorFlow dynamic calculation
             self.seqlen.append(num_interfaces +1)
@@ -63,7 +62,7 @@ class ToySequenceData(object):
 # ==========
 
 # Parameters
-learning_rate = 0.0001
+learning_rate = 0.00001
 training_iters = 1000000000
 batch_size = 100
 display_step = 1000
@@ -73,8 +72,8 @@ seq_max_len = 20 # Sequence max length
 n_hidden = 64 # hidden layer num of features
 n_classes = 16 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len)
-testset = ToySequenceData(n_samples=500, max_seq_len=seq_max_len)
+trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len, max_interfaces = n_classes)
+testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
 x = tf.placeholder("float", [None, seq_max_len, 4])
