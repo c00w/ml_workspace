@@ -25,7 +25,6 @@ class ToySequenceData(object):
             max_distance = max_value + 1
             destination = 0
             data = []
-            labels = []
             for i in  range(num_interfaces):
                 d = random.randint(0, max_value)
                 r = 1 if random.random() < 0.5 else 0
@@ -35,13 +34,11 @@ class ToySequenceData(object):
                     destination = i +1
                     max_distance = d
                 data.append([i+1, r, d, 0])
-                labels.append(0)
             data.append([0, 0, 0, 1])
-            labels.append(i)
+            labels = [0 if i != destination else 1 for i in range(max_interfaces)]
 
             for i in range(max_seq_len - num_interfaces -1):
                 data.append([0, 0, 0, 0])
-                labels.append(0)
 
             self.data.append(data)
             self.labels.append(labels)
@@ -67,7 +64,7 @@ class ToySequenceData(object):
 
 # Parameters
 learning_rate = 0.0001
-training_iters = 1000000
+training_iters = 10000000
 batch_size = 100
 display_step = 1000
 
