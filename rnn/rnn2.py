@@ -25,6 +25,7 @@ class ToySequenceData(object):
             max_distance = max_value + 1
             destination = 0
             data = []
+            labels = []
             for i in  range(num_interfaces):
                 d = random.randint(0, max_value)
                 r = 1 if random.random() < 0.5 else 0
@@ -34,11 +35,13 @@ class ToySequenceData(object):
                     destination = i +1
                     max_distance = d
                 data.append([i+1, r, d, 0])
+                labels.append(0)
             data.append([0, 0, 0, 1])
-            labels = [0 if i != destination else 1 for i in range(max_interfaces)]
+            labels.append(i)
 
             for i in range(max_seq_len - num_interfaces -1):
                 data.append([0, 0, 0, 0])
+                labels.append(0)
 
             self.data.append(data)
             self.labels.append(labels)
@@ -63,8 +66,8 @@ class ToySequenceData(object):
 # ==========
 
 # Parameters
-learning_rate = 0.001
-training_iters = 100000
+learning_rate = 0.0001
+training_iters = 1000000
 batch_size = 100
 display_step = 1000
 
@@ -73,7 +76,7 @@ seq_max_len = 20 # Sequence max length
 n_hidden = 64 # hidden layer num of features
 n_classes = 16 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len)
+trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len)
 testset = ToySequenceData(n_samples=500, max_seq_len=seq_max_len)
 
 # tf Graph input

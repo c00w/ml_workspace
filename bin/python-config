@@ -1,4 +1,4 @@
-#!/home/colin/tensorflow/bin/python
+#!/home/colin/ml_fuckery/bin/python
 
 import sys
 import getopt
