@@ -25,6 +25,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.contrib.learn.python.learn.estimators import _sklearn
+from tensorflow.contrib.learn.python.learn.estimators import estimator_test_utils
 
 
 def _get_quantile_based_buckets(feature_values, num_buckets):
@@ -58,6 +59,10 @@ def _iris_input_logistic_fn():
 
 
 class DNNLinearCombinedClassifierTest(tf.test.TestCase):
+
+  def testEstimatorContract(self):
+    estimator_test_utils.assert_estimator_contract(
+        self, tf.contrib.learn.DNNLinearCombinedClassifier)
 
   def testLogisticRegression_MatrixData(self):
     """Tests binary classification using matrix data as input."""
@@ -114,6 +119,41 @@ class DNNLinearCombinedClassifierTest(tf.test.TestCase):
 
     classifier.fit(input_fn=_input_fn, steps=100)
     scores = classifier.evaluate(input_fn=_input_fn, steps=100)
+    self.assertGreater(scores['accuracy'], 0.9)
+
+  def testTrainWithPartitionedVariables(self):
+    """Tests training with partitioned variables."""
+    def _input_fn():
+      features = {
+          'language': tf.SparseTensor(values=['en', 'fr', 'zh'],
+                                      indices=[[0, 0], [0, 1], [2, 0]],
+                                      shape=[3, 2])
+      }
+      target = tf.constant([[1], [0], [0]])
+      return features, target
+
+    sparse_features = [
+        # The given hash_bucket_size results in variables larger than the
+        # default min_slice_size attribute, so the variables are partitioned.
+        tf.contrib.layers.sparse_column_with_hash_bucket('language',
+                                                         hash_bucket_size=2e7)
+    ]
+    embedding_features = [
+        tf.contrib.layers.embedding_column(sparse_features[0], dimension=1)
+    ]
+
+    classifier = tf.contrib.learn.DNNLinearCombinedClassifier(
+        linear_feature_columns=sparse_features,
+        dnn_feature_columns=embedding_features,
+        dnn_hidden_units=[3, 3],
+        # Because we did not start a distributed cluster, we need to pass an
+        # empty ClusterSpec, otherwise the device_setter will look for
+        # distributed jobs, such as "/job:ps" which are not present.
+        config=tf.contrib.learn.RunConfig(
+            num_ps_replicas=2, cluster_spec=tf.train.ClusterSpec({})))
+
+    classifier.fit(input_fn=_input_fn, steps=100)
+    scores = classifier.evaluate(input_fn=_input_fn, steps=1)
     self.assertGreater(scores['accuracy'], 0.9)
 
   def testMultiClass(self):
@@ -188,10 +228,13 @@ class DNNLinearCombinedClassifierTest(tf.test.TestCase):
         linear_feature_columns=[tf.contrib.layers.real_valued_column('x')],
         dnn_feature_columns=[tf.contrib.layers.real_valued_column('x')],
         dnn_hidden_units=[3, 3])
-
-    classifier.fit(input_fn=_input_fn_train, steps=100)
-    scores = classifier.evaluate(input_fn=_input_fn_eval,
-                                 steps=100)
+    classifier.fit(input_fn=_input_fn_train, steps=100, monitors=(
+        tf.contrib.learn.monitors.CaptureVariable(var_name='loss'),
+        tf.contrib.learn.monitors.CaptureVariable(
+            var_name='centered_bias/training_loss'),
+        tf.contrib.learn.monitors.CaptureVariable(var_name='training_loss'),
+    ))
+    scores = classifier.evaluate(input_fn=_input_fn_eval, steps=100)
     # If there is no weight column, model should learn y=Not(x). All examples in
     # eval data set are y=x. So if weight column is ignored, then accuracy
     # should be zero.
@@ -216,8 +259,12 @@ class DNNLinearCombinedClassifierTest(tf.test.TestCase):
         linear_feature_columns=[tf.contrib.layers.real_valued_column('x')],
         dnn_feature_columns=[tf.contrib.layers.real_valued_column('x')],
         dnn_hidden_units=[3, 3])
-
-    classifier.fit(input_fn=_input_fn_train, steps=100)
+    classifier.fit(input_fn=_input_fn_train, steps=100, monitors=(
+        tf.contrib.learn.monitors.CaptureVariable(var_name='loss'),
+        tf.contrib.learn.monitors.CaptureVariable(
+            var_name='centered_bias/training_loss'),
+        tf.contrib.learn.monitors.CaptureVariable(var_name='training_loss'),
+    ))
     scores = classifier.evaluate(input_fn=_input_fn_train, steps=100)
     # If weight column is ignored, then accuracy should be 0.25. If it's not
     # ignored, then it should be greater than 0.6.
@@ -463,9 +510,10 @@ class DNNLinearCombinedClassifierTest(tf.test.TestCase):
     self.assertNotIn('dnn/logits/weights', classifier.get_variable_names())
     self.assertEquals(1, len(classifier.linear_bias_))
     self.assertEquals(2, len(classifier.linear_weights_))
+    print(classifier.linear_weights_)
     self.assertEquals(1, len(classifier.linear_weights_['linear/age/weight']))
     self.assertEquals(
-        100, len(classifier.linear_weights_['linear/language_weights']))
+        100, len(classifier.linear_weights_['linear/language/weights']))
 
   def testLinearOnlyOneFeature(self):
     """Tests that linear-only instantiation works for one feature only."""
@@ -532,6 +580,10 @@ class DNNLinearCombinedClassifierTest(tf.test.TestCase):
 
 
 class DNNLinearCombinedRegressorTest(tf.test.TestCase):
+
+  def testEstimatorContract(self):
+    estimator_test_utils.assert_estimator_contract(
+        self, tf.contrib.learn.DNNLinearCombinedRegressor)
 
   def _input_fn_train(self):
     # Create 4 rows of (y = x)

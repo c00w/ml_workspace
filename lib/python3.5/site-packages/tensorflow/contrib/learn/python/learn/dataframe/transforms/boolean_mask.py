@@ -42,7 +42,7 @@ def sparse_boolean_mask(sparse_tensor, mask, name="sparse_boolean_mask"):
     `True`.
   """
   # TODO(jamieas): consider mask dimension > 1 for symmetry with `boolean_mask`.
-  with ops.op_scope([sparse_tensor, mask], name):
+  with ops.name_scope(name, values=[sparse_tensor, mask]):
     mask = ops.convert_to_tensor(mask)
     mask_rows = array_ops.where(mask)
     first_indices = array_ops.squeeze(array_ops.slice(sparse_tensor.indices,
@@ -62,7 +62,7 @@ def sparse_boolean_mask(sparse_tensor, mask, name="sparse_boolean_mask"):
 
 
 @series.Series.register_binary_op("select_rows")
-class BooleanMask(transform.Transform):
+class BooleanMask(transform.TensorFlowTransform):
   """Apply a boolean mask to a `Series`."""
 
   @property
