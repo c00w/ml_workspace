@@ -63,10 +63,10 @@ class ToySequenceData(object):
 # ==========
 
 # Parameters
-learning_rate = 0.01
-training_iters = 100
-batch_size = 20
-display_step = 1
+learning_rate = 0.001
+training_iters = 100000
+batch_size = 100
+display_step = 1000
 
 # Network Parameters
 seq_max_len = 20 # Sequence max length
@@ -100,7 +100,7 @@ def dynamicRNN(x, seqlen, weights, biases):
     # Permuting batch_size and n_steps
     x = tf.transpose(x, [1, 0, 2])
     # Reshaping to (n_steps*batch_size, n_input)
-    x = tf.reshape(x, [-1, 1])
+    x = tf.reshape(x, [-1, 4])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     x = tf.split(0, seq_max_len, x)
 
@@ -155,9 +155,6 @@ with tf.Session() as sess:
     while step * batch_size < training_iters:
         batch_x, batch_y, batch_seqlen = trainset.next(batch_size)
         # Run optimization op (backprop)
-        print(batch_x)
-        print(batch_y)
-        print(batch_seqlen)
         sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
                                        seqlen: batch_seqlen})
         if step % display_step == 0:
