@@ -19,7 +19,7 @@ class ToySequenceData(object):
             # Random sequence length
             num_interfaces = random.randint(min_seq_len, max_interfaces)
             # Monitor sequence length for TensorFlow dynamic calculation
-            self.seqlen.append(num_interfaces +1)
+            self.seqlen.append(num_interfaces)
 
             max_distance = max_value + 1
             destination = 0
@@ -32,12 +32,11 @@ class ToySequenceData(object):
                 if (max_distance > d and r >0):
                     destination = i +1
                     max_distance = d
-                data.append([i+1, r, d, 0])
-            data.append([0, 0, 0, 1])
+                data.append([i+1, r, d])
             labels = [0 if i != destination else 1 for i in range(max_interfaces)]
 
-            for i in range(max_seq_len - num_interfaces -1):
-                data.append([0, 0, 0, 0])
+            for i in range(max_seq_len - num_interfaces ):
+                data.append([0, 0, 0])
 
             self.data.append(data)
             self.labels.append(labels)
@@ -76,7 +75,7 @@ trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len, max_interfa
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
-x = tf.placeholder("float", [None, seq_max_len, 4])
+x = tf.placeholder("float", [None, seq_max_len, 3])
 y = tf.placeholder("float", [None, n_classes])
 # A placeholder for indicating each sequence length
 seqlen = tf.placeholder(tf.int32, [None])
@@ -99,7 +98,7 @@ def dynamicRNN(x, seqlen, weights, biases):
     # Permuting batch_size and n_steps
     x = tf.transpose(x, [1, 0, 2])
     # Reshaping to (n_steps*batch_size, n_input)
-    x = tf.reshape(x, [-1, 4])
+    x = tf.reshape(x, [-1, 3])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     x = tf.split(0, seq_max_len, x)
 
