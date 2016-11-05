@@ -32,11 +32,14 @@ class ToySequenceData(object):
                 if (max_distance > d and r >0):
                     destination = i +1
                     max_distance = d
-                data.append([i+1, r, d])
+                point = [0 if i !=j else 1 for j in range(max_interfaces)]
+                point.append(r)
+                point.append(d)
+                data.append(point)
             labels = [0 if i != destination else 1 for i in range(max_interfaces)]
 
             for i in range(max_seq_len - num_interfaces ):
-                data.append([0, 0, 0])
+                data.append([0 for j in range(max_interfaces+2)])
 
             self.data.append(data)
             self.labels.append(labels)
@@ -75,7 +78,7 @@ trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len, max_interfa
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
-x = tf.placeholder("float", [None, seq_max_len, 3])
+x = tf.placeholder("float", [None, seq_max_len, n_classes+2])
 y = tf.placeholder("float", [None, n_classes])
 # A placeholder for indicating each sequence length
 seqlen = tf.placeholder(tf.int32, [None])
@@ -98,7 +101,7 @@ def dynamicRNN(x, seqlen, weights, biases):
     # Permuting batch_size and n_steps
     x = tf.transpose(x, [1, 0, 2])
     # Reshaping to (n_steps*batch_size, n_input)
-    x = tf.reshape(x, [-1, 3])
+    x = tf.reshape(x, [-1, n_classes+2])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     x = tf.split(0, seq_max_len, x)
 
@@ -165,6 +168,13 @@ with tf.Session() as sess:
             print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
                   "{:.5f}".format(acc))
+            # Calculate accuracy
+            test_data = testset.data
+            test_label = testset.labels
+            test_seqlen = testset.seqlen
+            print("Testing Accuracy:", \
+                sess.run(accuracy, feed_dict={x: test_data, y: test_label,
+                                              seqlen: test_seqlen}))
         step += 1
     print("Optimization Finished!")
 
