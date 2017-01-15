@@ -2,3 +2,4 @@ bin
 include
 lib
 bazel-*
+cost_rnn/data.record
