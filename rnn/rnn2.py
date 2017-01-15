@@ -1,3 +1,8 @@
+"""
+This file basically replicates a basic distance algorithm and sends the output
+to the correct interface.
+"""
+
 from __future__ import print_function
 
 import tensorflow as tf
@@ -64,17 +69,17 @@ class ToySequenceData(object):
 # ==========
 
 # Parameters
-learning_rate = 0.00001
+learning_rate = 0.001
 training_iters = 1000000000
-batch_size = 100
-display_step = 1000
+batch_size = 1000
+display_step = 100
 
 # Network Parameters
 seq_max_len = 20 # Sequence max length
 n_hidden = 64 # hidden layer num of features
 n_classes = 16 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=10000, max_seq_len=seq_max_len, max_interfaces = n_classes)
+trainset = ToySequenceData(n_samples=100000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
