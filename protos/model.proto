@@ -1,0 +1,8 @@
+syntax = "proto3";
+import "protos/example.proto";
+
+package tensorflow;
+
+message Model {
+    repeated SequenceExample examples = 1;
+}
