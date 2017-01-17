@@ -60,7 +60,6 @@ class ToySequenceData(object):
                                                   batch_size, len(self.data))])
         batch_seqlen = (self.seqlen[self.batch_id:min(self.batch_id +
                                                   batch_size, len(self.data))])
-        print(batch_seglen)
         self.batch_id = min(self.batch_id + batch_size, len(self.data))
         return batch_data, batch_labels, batch_seqlen
 
@@ -80,7 +79,7 @@ seq_max_len = 20 # Sequence max length
 n_hidden = 64 # hidden layer num of features
 n_classes = 16 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=100000, max_seq_len=seq_max_len, max_interfaces = n_classes)
+trainset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
@@ -116,7 +115,7 @@ def dynamicRNN(x, seqlen, weights, biases):
 
     # Get lstm cell output, providing 'sequence_length' will perform dynamic
     # calculation.
-    outputs, states = tf.nn.dynamic_rnn(lstm_cell, x, dtype=tf.float32,
+    outputs, states = tf.contrib.rnn.static_rnn(lstm_cell, x, dtype=tf.float32,
                                 sequence_length=seqlen)
 
     # When performing dynamic calculation, we must retrieve the last
@@ -128,7 +127,7 @@ def dynamicRNN(x, seqlen, weights, biases):
 
     # 'outputs' is a list of output at every timestep, we pack them in a Tensor
     # and change back dimension to [batch_size, n_step, n_input]
-    outputs = tf.pack(outputs)
+    outputs = tf.stack(outputs)
     outputs = tf.transpose(outputs, [1, 0, 2])
 
     # Hack to build the indexing and retrieve the right output.
@@ -144,7 +143,7 @@ def dynamicRNN(x, seqlen, weights, biases):
 pred = dynamicRNN(x, seqlen, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Evaluate model
@@ -152,10 +151,11 @@ correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 # Initializing the variables
-init = tf.initialize_all_variables()
+init = tf.global_variables_initializer()
 
 # Launch the graph
 with tf.Session() as sess:
+    print('Starting')
     sess.run(init)
     step = 1
     # Keep training until reach max iterations
