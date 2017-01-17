@@ -79,7 +79,7 @@ seq_max_len = 20 # Sequence max length
 n_hidden = 64 # hidden layer num of features
 n_classes = 16 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
+trainset = ToySequenceData(n_samples=100000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
@@ -96,6 +96,7 @@ biases = {
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
+    # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
 
 def dynamicRNN(x, seqlen, weights, biases):
 
