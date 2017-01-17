@@ -106,20 +106,17 @@ def dynamicRNN(x, seqlen, weights, biases):
 
     # Permuting batch_size and n_steps
     x = tf.transpose(x, [1, 0, 2])
-    x = tf.Print(x, [x])
     # Reshaping to (n_steps*batch_size, n_input)
     x = tf.reshape(x, [-1, n_classes+2])
-    x = tf.Print(x, [x])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
-    x = tf.split(0, seq_max_len, x)
-    x = tf.Print(x, [x])
+    x = tf.split(axis=0, num_or_size_splits=seq_max_len, value=x)
 
     # Define a lstm cell with tensorflow
-    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden, state_is_tuple=True)
+    lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, state_is_tuple=True)
 
     # Get lstm cell output, providing 'sequence_length' will perform dynamic
     # calculation.
-    outputs, states = tf.nn.rnn(lstm_cell, x, dtype=tf.float32,
+    outputs, states = tf.nn.dynamic_rnn(lstm_cell, x, dtype=tf.float32,
                                 sequence_length=seqlen)
 
     # When performing dynamic calculation, we must retrieve the last
