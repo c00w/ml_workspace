@@ -60,6 +60,7 @@ class ToySequenceData(object):
                                                   batch_size, len(self.data))])
         batch_seqlen = (self.seqlen[self.batch_id:min(self.batch_id +
                                                   batch_size, len(self.data))])
+        print(batch_seglen)
         self.batch_id = min(self.batch_id + batch_size, len(self.data))
         return batch_data, batch_labels, batch_seqlen
 
@@ -83,10 +84,10 @@ trainset = ToySequenceData(n_samples=100000, max_seq_len=seq_max_len, max_interf
 testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
 
 # tf Graph input
-x = tf.placeholder("float", [batch_size, seq_max_len, n_classes+2])
-y = tf.placeholder("float", [batch_size, n_classes])
+x = tf.placeholder(tf.float32, [batch_size, seq_max_len, n_classes+2])
+y = tf.placeholder(tf.float32, [batch_size, n_classes])
 # A placeholder for indicating each sequence length
-seqlen = tf.placeholder(tf.int32, [None])
+seqlen = tf.placeholder(tf.int32, [batch_size])
 
 # Define weights
 weights = {
@@ -105,10 +106,13 @@ def dynamicRNN(x, seqlen, weights, biases):
 
     # Permuting batch_size and n_steps
     x = tf.transpose(x, [1, 0, 2])
+    x = tf.Print(x, [x])
     # Reshaping to (n_steps*batch_size, n_input)
     x = tf.reshape(x, [-1, n_classes+2])
+    x = tf.Print(x, [x])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     x = tf.split(0, seq_max_len, x)
+    x = tf.Print(x, [x])
 
     # Define a lstm cell with tensorflow
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden, state_is_tuple=True)

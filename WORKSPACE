@@ -14,4 +14,10 @@ git_repository(
 load("@org_pubref_rules_protobuf//go:rules.bzl", "go_proto_repositories")
 go_proto_repositories()
 
+local_repository(
+    name = "org_tensorflow",
+    path = "tensorflow",
+)
+load('@org_tensorflow//tensorflow:workspace.bzl', 'tf_workspace')
+tf_workspace()
 

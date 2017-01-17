@@ -17,3 +17,12 @@ genrule(
     ],
     outs = ["data.record"],
 )
+
+py_binary(
+    name="rnn2",
+    main="rnn2.py",
+    srcs = ["rnn2.py"],
+    deps = [
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
+)
