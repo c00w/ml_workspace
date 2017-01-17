@@ -22,7 +22,11 @@ py_binary(
     name="rnn2",
     main="rnn2.py",
     srcs = ["rnn2.py"],
+    data = [
+        ":make_test_data",
+    ],
     deps = [
+        "//protos:py_tensorflow_example",
         "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
