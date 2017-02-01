@@ -1,0 +1,1 @@
+common -c opt --copt=-march=native
