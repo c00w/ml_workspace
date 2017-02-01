@@ -5,62 +5,39 @@ to the correct interface.
 
 from __future__ import print_function
 
+import protos.model_pb2 as model_pb2
+import google.protobuf.text_format as text_format
+import pkgutil
 import tensorflow as tf
 import numpy as np
 import random
+import sys
 
-
-class ToySequenceData(object):
-    def __init__(self, n_samples=1000, max_seq_len=20, min_seq_len=3,
-                 max_value=1000, max_interfaces=10):
+class ProtoSequenceData(object):
+    def __init__(self, pb, start, count):
+        self.index = 0
         self.data = []
         self.labels = []
-        self.seqlen = []
-        self.batch_id = 0
-        for i in range(n_samples):
-            distance = []
-            reachable = []
-
-            # Random sequence length
-            num_interfaces = random.randint(min_seq_len, max_interfaces)
-            # Monitor sequence length for TensorFlow dynamic calculation
-            self.seqlen.append(num_interfaces)
-
-            max_distance = max_value + 1
-            destination = 0
+        self.seqlen = len(pb.examples[0].feature_lists.feature_list["interface_ids"].feature[0].float_list.value)
+        for example in pb.examples[start:start+count]:
             data = []
-            for i in  range(num_interfaces):
-                d = random.randint(0, max_value)
-                r = 1 if random.random() < 0.5 else 0
-                distance.append(d)
-                reachable.append(r)
-                if (max_distance > d and r >0):
-                    destination = i +1
-                    max_distance = d
-                point = [0 if i !=j else 1 for j in range(max_interfaces)]
-                point.append(r)
-                point.append(d)
+            label = None
+            for i in range(self.seqlen):
+                point = []
+                for field in ("interface_ids", "size", "value"):
+                    point.append(example.feature_lists.feature_list[field].feature[0].float_list.value[i])
+                label = example.feature_lists.feature_list["delivered_value"].feature[0].float_list.value[i]
                 data.append(point)
-            labels = [0 if i != destination else 1 for i in range(max_interfaces)]
-
-            for i in range(max_seq_len - num_interfaces ):
-                data.append([0 for j in range(max_interfaces+2)])
-
             self.data.append(data)
-            self.labels.append(labels)
+            self.labels.append([label])
 
     def next(self, batch_size):
-        """ Return a batch of data. When dataset end is reached, start over.
-        """
-        if self.batch_id == len(self.data):
-            self.batch_id = 0
-        batch_data = self.data[self.batch_id:min(self.batch_id +
-                                                  batch_size, len(self.data))]
-        batch_labels = (self.labels[self.batch_id:min(self.batch_id +
-                                                  batch_size, len(self.data))])
-        batch_seqlen = (self.seqlen[self.batch_id:min(self.batch_id +
-                                                  batch_size, len(self.data))])
-        self.batch_id = min(self.batch_id + batch_size, len(self.data))
+        if self.index == len(self.data):
+            self.index = 0
+        batch_data = self.data[self.index: self.index+batch_size]
+        batch_labels = self.labels[self.index: self.index+batch_size]
+        batch_seqlen =  [self.seqlen for i in range(batch_size)]
+        self.index += batch_size
         return batch_data, batch_labels, batch_seqlen
 
 
@@ -70,21 +47,28 @@ class ToySequenceData(object):
 
 # Parameters
 learning_rate = 0.001
-training_iters = 1000000000
-batch_size = 1000
-display_step = 100
+training_iters = 1000
+batch_size = 10
+display_step = 10
 
 # Network Parameters
-seq_max_len = 20 # Sequence max length
+seq_max_len = 100
 n_hidden = 64 # hidden layer num of features
-n_classes = 16 # linear sequence or not
+n_classes = 1 # linear sequence or not
 
-trainset = ToySequenceData(n_samples=100000, max_seq_len=seq_max_len, max_interfaces = n_classes)
-testset = ToySequenceData(n_samples=1000, max_seq_len=seq_max_len, max_interfaces = n_classes)
+f = open(sys.argv[1], "rb")
+model = model_pb2.Model()
+text = f.read()
+text_format.Merge(text.decode(), model)
+f.close()
+
+trainset = ProtoSequenceData(model, 10, 90)
+testset = ProtoSequenceData(model, 0, 10)
+print('data loaded')
 
 # tf Graph input
-x = tf.placeholder(tf.float32, [batch_size, seq_max_len, n_classes+2])
-y = tf.placeholder(tf.float32, [batch_size, n_classes])
+x = tf.placeholder(tf.float32, [batch_size, seq_max_len, 3])
+y = tf.placeholder(tf.float32, [batch_size, 1])
 # A placeholder for indicating each sequence length
 seqlen = tf.placeholder(tf.int32, [batch_size])
 
@@ -176,9 +160,7 @@ with tf.Session() as sess:
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
                   "{:.5f}".format(acc))
             # Calculate accuracy
-            test_data = testset.data
-            test_label = testset.labels
-            test_seqlen = testset.seqlen
+            test_data, test_label, test_seqlen = testset.next(batch_size)
             print("Testing Accuracy:", \
                 sess.run(accuracy, feed_dict={x: test_data, y: test_label,
                                               seqlen: test_seqlen}))
@@ -186,9 +168,7 @@ with tf.Session() as sess:
     print("Optimization Finished!")
 
     # Calculate accuracy
-    test_data = testset.data
-    test_label = testset.labels
-    test_seqlen = testset.seqlen
+    test_data, test_label, test_seqlen = testset.next(batch_size)
     print("Testing Accuracy:", \
         sess.run(accuracy, feed_dict={x: test_data, y: test_label,
                                       seqlen: test_seqlen}))

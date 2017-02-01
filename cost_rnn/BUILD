@@ -22,6 +22,7 @@ py_binary(
     name="rnn2",
     main="rnn2.py",
     srcs = ["rnn2.py"],
+    args = ["$(locations :make_test_data)"],
     data = [
         ":make_test_data",
     ],

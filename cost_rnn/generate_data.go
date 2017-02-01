@@ -109,7 +109,7 @@ func main() {
         log.Fatal(err)
     }
 
-    example_count := int64(10000)
+    example_count := int64(100)
     output := make([]*tensorflow.SequenceExample, example_count)
     for i := int64(0); i < example_count; i += 1 {
         rows := generate_decisions(100, 2)
