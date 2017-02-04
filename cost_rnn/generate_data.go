@@ -19,8 +19,11 @@ type Decision struct {
 func generate_decisions(size int64, num_int int64) []Decision {
     output := make([]Decision, size)
 
-    pipe_size := []int64{rand.Int63n(10000), rand.Int63n(10000)}
-    pipe_used := []int64{0, 0}
+    pipe_size := make([]int64, num_int)
+    for i := range pipe_size {
+        pipe_size[i] = rand.Int63n(1000)
+    }
+    pipe_used := make([]int64, num_int)
     for i := int64(0); i < size; i++ {
         packet_size := rand.Int63n(10000)
         interface_id := rand.Int63n(num_int)
@@ -32,13 +35,16 @@ func generate_decisions(size int64, num_int int64) []Decision {
         }
         pipe_used[interface_id] += packet_size
         for j := int64(0); j < num_int; j+=1 {
-            pipe_used[j] -= pipe_size[j] / 10
+            pipe_used[j] -= pipe_size[j] / 4
         }
 
         output[i].interface_id = float32(interface_id)
         output[i].size = float32(packet_size)
         output[i].value = float32(value)
         output[i].delivered_value = float32(delivered_value)
+    }
+    if (output[len(output)-1].delivered_value == 0) {
+        log.Print("dropped packet")
     }
     return output
 }
@@ -112,7 +118,7 @@ func main() {
     example_count := int64(10000)
     output := make([]*tensorflow.SequenceExample, example_count)
     for i := int64(0); i < example_count; i += 1 {
-        rows := generate_decisions(100, 2)
+        rows := generate_decisions(100, 15)
         output[i] = write_to_pb(rows)
     }
 
