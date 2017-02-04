@@ -14,12 +14,12 @@ import random
 import sys
 
 class ProtoSequenceData(object):
-    def __init__(self, pb, start, count):
+    def __init__(self, examples):
         self.index = 0
         self.data = []
         self.labels = []
-        self.seqlen = len(pb.examples[0].feature_lists.feature_list["interface_ids"].feature[0].float_list.value)
-        for example in pb.examples[start:start+count]:
+        self.seqlen = len(examples[0].feature_lists.feature_list["interface_ids"].feature[0].float_list.value)
+        for example in examples:
             data = []
             label = None
             for i in range(self.seqlen):
@@ -47,8 +47,8 @@ class ProtoSequenceData(object):
 
 # Parameters
 learning_rate = 0.001
-training_iters = 1000
-batch_size = 10
+training_iters = 100 * 200
+batch_size = 200
 display_step = 10
 
 # Network Parameters
@@ -62,13 +62,13 @@ text = f.read()
 text_format.Merge(text.decode(), model)
 f.close()
 
-trainset = ProtoSequenceData(model, 10, 90)
-testset = ProtoSequenceData(model, 0, 10)
+trainset = ProtoSequenceData(model.examples[200:len(model.examples)])
+testset = ProtoSequenceData(model.examples[0:200])
 print('data loaded')
 
 # tf Graph input
-x = tf.placeholder(tf.float32, [batch_size, seq_max_len, 3])
-y = tf.placeholder(tf.float32, [batch_size, 1])
+x = tf.placeholder(tf.float32, [batch_size, seq_max_len, 3], name="x")
+y = tf.placeholder(tf.float32, [batch_size, 1], name="y")
 # A placeholder for indicating each sequence length
 seqlen = tf.placeholder(tf.int32, [batch_size])
 

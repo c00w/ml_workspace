@@ -20,19 +20,19 @@ func generate_decisions(size int64, num_int int64) []Decision {
     output := make([]Decision, size)
 
     pipe_size := []int64{rand.Int63n(10000), rand.Int63n(10000)}
-    pipe_available := []int64{0, 0}
+    pipe_used := []int64{0, 0}
     for i := int64(0); i < size; i++ {
         packet_size := rand.Int63n(10000)
         interface_id := rand.Int63n(num_int)
         value := rand.Intn(10000)
         delivered_value := 0
 
-        if pipe_available[interface_id] +packet_size < pipe_size[interface_id] {
+        if pipe_used[interface_id] +packet_size < pipe_size[interface_id] {
             delivered_value =value;
         }
-        pipe_available[interface_id] += packet_size
+        pipe_used[interface_id] += packet_size
         for j := int64(0); j < num_int; j+=1 {
-            pipe_available[j] -= pipe_size[j]
+            pipe_used[j] -= pipe_size[j] / 10
         }
 
         output[i].interface_id = float32(interface_id)
@@ -109,7 +109,7 @@ func main() {
         log.Fatal(err)
     }
 
-    example_count := int64(100)
+    example_count := int64(10000)
     output := make([]*tensorflow.SequenceExample, example_count)
     for i := int64(0); i < example_count; i += 1 {
         rows := generate_decisions(100, 2)
