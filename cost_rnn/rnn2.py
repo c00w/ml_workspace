@@ -47,8 +47,8 @@ class ProtoSequenceData(object):
 
 # Parameters
 learning_rate = 0.001
-training_iters = 100 * 200
-batch_size = 200
+training_iters = 1000 * 200
+batch_size =200
 display_step = 10
 
 # Network Parameters
@@ -62,8 +62,8 @@ text = f.read()
 text_format.Merge(text.decode(), model)
 f.close()
 
-trainset = ProtoSequenceData(model.examples[200:len(model.examples)])
-testset = ProtoSequenceData(model.examples[0:200])
+trainset = ProtoSequenceData(model.examples[batch_size:len(model.examples)])
+testset = ProtoSequenceData(model.examples[0:batch_size])
 print('data loaded')
 
 # tf Graph input
@@ -128,12 +128,11 @@ def dynamicRNN(x, seqlen, weights, biases):
 pred = dynamicRNN(x, seqlen, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+cost = tf.reduce_mean(tf.square(pred- y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Evaluate model
-correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+accuracy = tf.reduce_mean(tf.square(pred- y))
 
 # Initializing the variables
 init = tf.global_variables_initializer()
